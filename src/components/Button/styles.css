@@ -1,0 +1,7 @@
+.button_component {
+    background-color: darkgrey;
+    width: auto;
+    height: auto;
+    border-radius: 5px;
+    padding: 15px;
+}
