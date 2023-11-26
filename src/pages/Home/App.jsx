@@ -16,6 +16,7 @@ function App() {
         41, 42, 43, 44, 45, 46, 47, 48, 49, 50])
   
   const [processoEmExecucao, setProcessoEmExecucao] = useState([])
+  
 
   function adicionarProcesso() {
     const novaLista = [...listaDeProcessos, 
@@ -79,6 +80,7 @@ function escalonarProcessos() {
     setProcessoEmExecucao([...processoEmExecucao, { processo: NaN, sobrecarga: 0, time: tempo },]);
     return;
   }
+  console.log("ALGORITMO ESCOLHIDO = ", algoritmoEscalonador)
   if (algoritmoEscalonador == "FIFO") fifo();
   if (algoritmoEscalonador == "SJF") sjf();
   if (algoritmoEscalonador == "RR") rr();
@@ -87,6 +89,26 @@ function escalonarProcessos() {
 
 function fifo() {
   executarProcessoTempoAtual();
+}
+
+function sjf() {
+  console.log("FILA DE PROCESSOS ANTS:", filaProcessos)
+  filaProcessos.sort((a, b) => {
+    const tempoExecucaoA = listaDeProcessos.find(processo => processo.id === a).tempoExecucao;
+    const vezesExecutadoA = listaDeProcessos.find(processo => processo.id === a).vezesExecutado;
+    const tempoExecucaoB =  listaDeProcessos.find(processo => processo.id === b).tempoExecucao;
+    const vezesExecutadoB = listaDeProcessos.find(processo => processo.id === b).vezesExecutado;
+    return (tempoExecucaoA - vezesExecutadoA) - (tempoExecucaoB - vezesExecutadoB);
+  });
+
+  setFilaProcessos(filaProcessos);
+  executarProcessoTempoAtual();
+}
+
+function roundRobin() {
+  if(processoEmExecucao.length >= quantum) {
+
+  }
 }
 
 function executarProcessoTempoAtual(sobrecarga = 0) {
@@ -101,11 +123,7 @@ function executarProcessoTempoAtual(sobrecarga = 0) {
       listaDeProcessos.map((processo) => processo.id == filaProcessos[0] ?
        Object.assign(processo, {vezesExecutado:  processo.vezesExecutado+1}) : processo));
 
-       console.log("LISTA DE PROCESSOS:", listaDeProcessos)
-
        const processoAtual = listaDeProcessos.find(processo => processo.id === filaProcessos[0])
-
-       console.log("PROCESSO ATUAL:", processoAtual)
 
        if (processoAtual && processoAtual.vezesExecutado == processoAtual.tempoExecucao) {
           setFilaProcessos(filaProcessos.slice(1))  //adiciona o ultimo elemento na fila de execucao
@@ -113,7 +131,7 @@ function executarProcessoTempoAtual(sobrecarga = 0) {
   }
 }
 
-function processExecutionColor(
+function montarCorExecucao(
   process,
   indexProcessInTime) {
 
@@ -270,7 +288,7 @@ function processExecutionColor(
                   {processoEmExecucao.map((processInTime, indexProcessInTime) => (
                     <td
                       key={`${i}-${indexProcessInTime}`}
-                      className={`${processExecutionColor(
+                      className={`${montarCorExecucao(
                         process,
                         indexProcessInTime
                       )}`}
