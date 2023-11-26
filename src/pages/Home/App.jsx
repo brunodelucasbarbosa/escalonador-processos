@@ -54,12 +54,9 @@ useEffect(() => {
   if(algoritmoEmExecucao) {
       let intervalo = setInterval( async () => {
           const tempoAtual = tempo;
-          const resultado = listaDeProcessos.filter(
-              processo => {
+          const resultado = listaDeProcessos.filter(processo => {
                   return processo.tempoChegada == tempoAtual
-              }).map(
-                  processo => processo.id
-              );
+              }).map(processo => processo.id);
 
           filaProcessos.push(...resultado)
           setFilaProcessos(filaProcessos)
@@ -162,7 +159,7 @@ function edf() {
 
 function ordernarPorDeadline() {
   filaProcessos.sort((a, b) => {
-    return delistaDeProcessos.find(processo => processo.id === a).deadlineadlineA - 
+    return listaDeProcessos.find(processo => processo.id === a).deadlineadlineA - 
     listaDeProcessos.find(processo => processo.id === b).deadline;
   });
   setFilaProcessos(filaProcessos);
@@ -187,9 +184,7 @@ function executarProcessoTempoAtual(sobrecarga = 0) {
   }
 }
 
-function montarCorExecucao(
-  process,
-  i) {
+function montarCorExecucao(process,i) {
 
   if (process.id != processoEmExecucao[i].processo) return "";
 
@@ -274,7 +269,7 @@ function montarCorExecucao(
         </button>
       </div>
 
-<table className="table-process flex flex-col gap-10">
+        <table className="table-process flex flex-col gap-10">
           <thead>
             <tr>
               <td className="process-info">Excluir</td>
@@ -292,7 +287,6 @@ function montarCorExecucao(
               .map((process, i) => (
                 <tr key={i}>
                   <td
-                    //style={{ cursor: runCpu ? "initial" : "pointer" }}
                     className="process-info"
                     onClick={() => !algoritmoEmExecucao && excluirProcesso(process.id)}>
                     <img src={Trash} alt="excluir processo" />

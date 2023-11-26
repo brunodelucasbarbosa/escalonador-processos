@@ -1,8 +1,6 @@
-# React + Vite
+# MATA58 - Escalonador de Processos
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Projeto feito na disciplina de Sistemas Operacionais durante o semestre 2023.2 da Universidade Federal Da Bahia
+Lecionada por Maycon Peixoto.
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Aluno: Bruno Barbosa
