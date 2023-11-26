@@ -9,14 +9,13 @@ function App() {
   const [algoritmoEmExecucao, setAlgoritmoEmExecucao] = useState(false)
   let [filaProcessos, setFilaProcessos] = useState([])
   const [tempo, setTempo] = useState(0)
-  const [memoria, setMemoria] = useState([1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-     11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-      21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
-       31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
-        41, 42, 43, 44, 45, 46, 47, 48, 49, 50])
+  const [memoria, setMemoria] = useState(
+    Array.from({ length: 50 }, (_, index) => ({ numero: index + 1, emUso: false }))
+  );
   
   const [processoEmExecucao, setProcessoEmExecucao] = useState([])
-  
+  const [quantum, setQuantum] = useState(0)
+  const [sobrecarga, setSobrecarga] = useState(0)
 
   function adicionarProcesso() {
     const novaLista = [...listaDeProcessos, 
@@ -51,7 +50,6 @@ function App() {
   }
 
 useEffect(() => {
-  console.log(listaDeProcessos)
   if (verificarSeFinalizou()) setAlgoritmoEmExecucao(false)
   if(algoritmoEmExecucao) {
       let intervalo = setInterval( async () => {
@@ -75,15 +73,24 @@ useEffect(() => {
   }
 })
 
+function escalonarMemoria() {
+  if (filaProcessos.length == 0) return
+
+  const processoAtual = listaDeProcessos.find(processo => processo.id === filaProcessos[0]);
+  const paginasProcesso = processoAtual.paginas;
+
+  // verifica se tem espaço na memoria
+}
+
 function escalonarProcessos() {
   if (filaProcessos.length == 0) {
     setProcessoEmExecucao([...processoEmExecucao, { processo: NaN, sobrecarga: 0, time: tempo },]);
     return;
   }
-  console.log("ALGORITMO ESCOLHIDO = ", algoritmoEscalonador)
+
   if (algoritmoEscalonador == "FIFO") fifo();
   if (algoritmoEscalonador == "SJF") sjf();
-  if (algoritmoEscalonador == "RR") rr();
+  if (algoritmoEscalonador == "RR") roundRobin();
   if (algoritmoEscalonador == "EDF") edf();
 }
 
@@ -92,7 +99,6 @@ function fifo() {
 }
 
 function sjf() {
-  console.log("FILA DE PROCESSOS ANTS:", filaProcessos)
   filaProcessos.sort((a, b) => {
     const tempoExecucaoA = listaDeProcessos.find(processo => processo.id === a).tempoExecucao;
     const vezesExecutadoA = listaDeProcessos.find(processo => processo.id === a).vezesExecutado;
@@ -107,8 +113,59 @@ function sjf() {
 
 function roundRobin() {
   if(processoEmExecucao.length >= quantum) {
+    
+    if(processoEmExecucao[processoEmExecucao.length -1].sobrecarga > 0) {
 
+      if(processoEmExecucao[processoEmExecucao.length -1].sobrecarga < sobrecarga) {
+        executarProcessoTempoAtual(processoEmExecucao[processoEmExecucao.length -1].sobrecarga + 1);
+
+      } else {
+        filaProcessos = [...filaProcessos.slice(1), filaProcessos[0]];
+        setFilaProcessos(filaProcessos);
+        executarProcessoTempoAtual();
+      }
+
+    } else if (processoEmExecucao.slice(-1 * quantum).every((p) => p.processo == filaProcessos[0])) {
+      executarProcessoTempoAtual(1);
+    } else {
+      executarProcessoTempoAtual();
+    }
+  } else {
+    executarProcessoTempoAtual();
   }
+}
+
+function edf() {
+  if(processoEmExecucao.length >= quantum) {
+    
+    if(processoEmExecucao[processoEmExecucao.length -1].sobrecarga > 0) {
+      
+      if(processoEmExecucao[processoEmExecucao.length -1].sobrecarga < sobrecarga) {
+        executarProcessoTempoAtual(processoEmExecucao[processoEmExecucao.length -1].sobrecarga + 1);
+      } else {
+        ordernarPorDeadline();
+        executarProcessoTempoAtual();
+      }
+
+    } else if (processoEmExecucao.slice(-quantum).every((p) => p.processo == filaProcessos[0])) {
+      executarProcessoTempoAtual(1);
+
+    } else {
+      executarProcessoTempoAtual();
+    }
+
+  } else {
+      ordernarPorDeadline();
+      executarProcessoTempoAtual();
+  }
+}
+
+function ordernarPorDeadline() {
+  filaProcessos.sort((a, b) => {
+    return delistaDeProcessos.find(processo => processo.id === a).deadlineadlineA - 
+    listaDeProcessos.find(processo => processo.id === b).deadline;
+  });
+  setFilaProcessos(filaProcessos);
 }
 
 function executarProcessoTempoAtual(sobrecarga = 0) {
@@ -116,7 +173,6 @@ function executarProcessoTempoAtual(sobrecarga = 0) {
     ...processoEmExecucao,
     { processo: filaProcessos[0], sobrecarga, time: tempo },
   ]);
-  console.log("filaProcessos: ", filaProcessos)
 
   if (sobrecarga == 0) {
     setListaDeProcessos(
@@ -133,13 +189,13 @@ function executarProcessoTempoAtual(sobrecarga = 0) {
 
 function montarCorExecucao(
   process,
-  indexProcessInTime) {
+  i) {
 
-  if (process.id != processoEmExecucao[indexProcessInTime].processo) return "";
+  if (process.id != processoEmExecucao[i].processo) return "";
 
-  if (processoEmExecucao[indexProcessInTime].sobrecarga > 0) return "bg-red-800";
+  if (processoEmExecucao[i].sobrecarga > 0) return "bg-red-800";
 
-  if (algoritmoEscalonador == "EDF" && processoEmExecucao[indexProcessInTime].time >= process.tempoChegada + process.deadline) {
+  if (algoritmoEscalonador == "EDF" && processoEmExecucao[i].time >= process.tempoChegada + process.deadline) {
     return "bg-gray-500";
   }
   
@@ -179,9 +235,35 @@ function montarCorExecucao(
         algoritmoEscalonador={algoritmoEscalonador}
         setAlgoritmoEscalonador={setAlgoritmoEscalonador}
         processo={"EDF"}/>
+
+        <label className="text-3xl">
+          Quantum: 
+          <input
+            className='ml-5'
+            disabled={algoritmoEmExecucao}
+            type="number"
+            onChange={(e) =>
+              setQuantum(parseInt(e.target.value))
+            }
+            />
+          <hr></hr>
+        </label>
+
+        <label className="text-3xl">
+          Sobrecarga: 
+          <input
+            className='ml-5'
+            disabled={algoritmoEmExecucao}
+            type="number"
+            onChange={(e) =>
+              setSobrecarga(parseInt(e.target.value))
+            }
+            />
+          <hr></hr>
+        </label>
        </div>
       
-      <div className="flex flex-row gap-1">
+      <div className="flex justify-center flex-row gap-1 m-5">
         <button className="adicionar_processos" onClick={adicionarProcesso}>
           <span>Adicionar processo</span>
         </button>
@@ -191,10 +273,6 @@ function montarCorExecucao(
           <span>Iniciar escalonamento</span>
         </button>
       </div>
-
-        <button className="limpar_processos">
-          <span>Limpar processos</span>
-        </button>
 
 <table className="table-process flex flex-col gap-10">
           <thead>
@@ -285,12 +363,12 @@ function montarCorExecucao(
                       }
                     />
                   </td>
-                  {processoEmExecucao.map((processInTime, indexProcessInTime) => (
+                  {processoEmExecucao.map((_, i) => (
                     <td
-                      key={`${i}-${indexProcessInTime}`}
+                      key={`${i}-${i}`}
                       className={`${montarCorExecucao(
                         process,
-                        indexProcessInTime
+                        i
                       )}`}
                     ></td>
                   ))}
@@ -311,7 +389,7 @@ function montarCorExecucao(
           <div className="tabela">
             {memoria.map((m, i) => (
               <div key={i} className="ram">
-                <span>{m}</span>
+                <span>{m.numero}</span>
               </div>
             ))}
             </div>
